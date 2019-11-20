@@ -1,12 +1,12 @@
 {
-  "name": "aeproject-project",
+  "name": "aeternity-token-sale-example",
   "version": "1.0.0",
   "description": "This is the default package.json generated for your project",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Milen Radkov <milenradkov@me.com>",
   "license": "ISC",
   "dependencies": {
     "@aeternity/aepp-sdk": "6.0.0",
