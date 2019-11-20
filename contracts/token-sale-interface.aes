@@ -1,0 +1,8 @@
+@compiler >= 4
+
+contract TokenSaleInterface =
+   entrypoint price        : unit => int
+   entrypoint token        : unit => option(address)
+   entrypoint set_token    : address => unit
+   entrypoint contribute   : unit => unit
+   entrypoint withdraw     : unit => unit
