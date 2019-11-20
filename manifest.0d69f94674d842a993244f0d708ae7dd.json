@@ -1,0 +1,9 @@
+{
+  "name": "Sample Token Sale",
+  "short_name": "STT Sale",
+  "orientation": "portrait",
+  "display": "standalone",
+  "start_url": ".",
+  "description": "Sample aepp for aex-9 token sale on testnet.",
+  "background_color": "#ff0d6a"
+}
