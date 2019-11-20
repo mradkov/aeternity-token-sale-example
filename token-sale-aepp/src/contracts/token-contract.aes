@@ -1,2 +1,3 @@
 contract TokenContract =
   entrypoint balance : (address) => option(int)
+  stateful entrypoint transfer : (address, int) => unit

@@ -11,3 +11,19 @@
 .text-primary {
   color: #FF0D6A;
 }
+
+.overlay-loader {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 100;
+  width: 100%;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 150px;
+  background-color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+}
