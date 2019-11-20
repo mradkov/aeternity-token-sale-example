@@ -16,6 +16,7 @@ contract TokenSale =
         price = price }
 
    entrypoint price() : int = state.price
+   entrypoint token() : option(FungibleTokenFullInterface) = state.token
    
    stateful entrypoint set_token(token: FungibleTokenFullInterface) =
       require_owner()
@@ -24,7 +25,9 @@ contract TokenSale =
    payable stateful entrypoint contribute() =
       require_token()
       let amount = Call.value / state.price
-      Option.force(state.token).mint(Call.caller, amount)
+      switch(state.token)
+         Some(token) => token.mint(Call.caller, amount)
+         None => abort("NO_TOKEN_CONTRACT")
 
    stateful entrypoint withdraw() =
       require_owner()
