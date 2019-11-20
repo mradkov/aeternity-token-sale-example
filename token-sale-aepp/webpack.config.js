@@ -49,7 +49,7 @@ module.exports = env => {
       new HtmlWebpackPlugin({
         inject: true,
         // chunks: ['main'],
-        title: 'Governance Aepp',
+        title: 'Sample Token Sale',
         template: './src/index.html',
         filename: path.join(__dirname, 'dist', 'index.html'),
         // Avoids building twice for dev
@@ -74,9 +74,9 @@ module.exports = env => {
       new CleanWebpackPlugin(),
       new VueLoaderPlugin(),
       new WebpackPwaManifest({
-        name: 'Example Aepp',
-        short_name: 'Example',
-        description: 'Your average aepp.',
+        name: 'Sample Token Sale',
+        short_name: 'STT Sale',
+        description: 'Sample aepp for aex-9 token sale on testnet.',
         background_color: '#ff0d6a'
       })
     ],
