@@ -1,0 +1,37 @@
+@compiler >= 4
+
+include "Option.aes"
+
+contract FungibleTokenFullInterface =
+  entrypoint mint                 : (address, int)          => unit
+
+contract TokenSale =
+   record state = { owner: address
+                  , price: int
+                  , token: option(FungibleTokenFullInterface) }
+
+   entrypoint init(price: int) : state = 
+      { token = None,
+        owner = Call.caller,
+        price = price }
+
+   entrypoint price() : int = state.price
+   
+   stateful entrypoint set_token(token: FungibleTokenFullInterface) =
+      require_owner()
+      put(state{ token = Some(token) })
+
+   payable stateful entrypoint contribute() =
+      require_token()
+      let amount = Call.value / state.price
+      Option.force(state.token).mint(Call.caller, amount)
+
+   stateful entrypoint withdraw() =
+      require_owner()
+      Chain.spend(Call.caller, Chain.balance(Contract.address))
+
+   function require_owner() =
+      require(Call.caller == state.owner, "UNAUTHORIZED")
+   
+   function require_token() =
+      require(Option.is_some(state.token), "NO_TOKEN_CONTRACT")
