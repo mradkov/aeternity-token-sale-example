@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="overlay-loader" v-show="showLoading">
+    <div class="overlay-loader" v-show="showLoading && !error">
       <BiggerLoader></BiggerLoader>
     </div>
     <div class="p-2">
@@ -18,8 +18,8 @@
         <ae-loader v-else/>
       </h1>
 
-      <ae-input label="Amount of Tokens to Buy" v-model="buyAmount"/>
-      <ae-button face="round" fill="primary" extend @click="contribute()">Buy {{buyAmount}} STT for {{buyAmount/price}}
+      <ae-input label="Amount of Tokens to Buy" type="number" min="0.1" v-model="buyAmount"/>
+      <ae-button face="round" fill="primary" extend @click="contribute()">Buy {{buyAmount}} STT for {{buyAmount*price}}
         AEtto
       </ae-button>
 
@@ -33,6 +33,7 @@
       </div>
       <ae-button face="round" fill="primary" extend @click="send()">Send {{transferAmount}} STT</ae-button>
     </div>
+    <CriticalErrorOverlay :error="error" @continue="$router.go()"></CriticalErrorOverlay>
   </div>
 </template>
 
@@ -40,10 +41,11 @@
     import aeternity from "../utils/aeternity";
     import {AeIdentity, AeLoader, AeInput, AeButton, AeButtonGroup} from "@aeternity/aepp-components";
     import BiggerLoader from "../components/BiggerLoader";
+    import CriticalErrorOverlay from "../components/CriticalErrorOverlay";
 
     export default {
         name: 'Home',
-        components: {AeIdentity, AeLoader, AeInput, AeButton, AeButtonGroup, BiggerLoader},
+        components: {AeIdentity, AeLoader, AeInput, AeButton, AeButtonGroup, BiggerLoader, CriticalErrorOverlay},
         data() {
             return {
                 error: null,
@@ -62,17 +64,26 @@
                     address: aeternity.address,
                     balance: parseInt(aeternity.balance)
                 };
-                this.sttbalance = (await aeternity.tokenContract.methods.balance(aeternity.address)).decodedResult || 0;
+                this.sttbalance = (await aeternity.tokenContract.methods.balance(aeternity.address).catch(e => {
+                    console.error(e);
+                    this.error = "Contract Execution failed, please try again"
+                })).decodedResult || 0;
                 this.showLoading = false;
             },
             async contribute() {
                 this.showLoading = true;
-                await aeternity.saleContract.methods.contribute({amount: this.buyAmount * this.price});
+                await aeternity.saleContract.methods.contribute({amount: this.buyAmount * this.price}).catch(e => {
+                    console.error(e);
+                    this.error = "Contract Execution failed, please try again"
+                });
                 this.refresh();
             },
             async send() {
                 this.showLoading = true;
-                await aeternity.tokenContract.methods.transfer(this.transferAddress, this.transferAmount);
+                await aeternity.tokenContract.methods.transfer(this.transferAddress, this.transferAmount).catch(e => {
+                    console.error(e);
+                    this.error = "Contract Execution failed, please try again"
+                });
                 this.refresh();
             }
         },
@@ -82,6 +93,10 @@
 
             if (aeternity.isTestnet() && aeternity.balance <= 5) {
                 await axios.post(`https://testnet.faucet.aepps.com/account/${aeternity.address}`, {}, {headers: {'content-type': 'application/x-www-form-urlencoded'}}).catch(console.error);
+            }
+
+            if (!aeternity.isTestnet()) {
+                this.error = "This Aepp is only available on Testnet, in Base-Aepp in Settings -> Network choose Testnet."
             }
 
             this.price = (await aeternity.saleContract.methods.price()).decodedResult;
