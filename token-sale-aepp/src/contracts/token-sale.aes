@@ -1,0 +1,3 @@
+contract TokenSale =
+  entrypoint price : () => int
+  payable stateful entrypoint contribute : () => unit

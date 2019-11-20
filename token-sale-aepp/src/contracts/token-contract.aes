@@ -1,0 +1,2 @@
+contract TokenContract =
+  entrypoint balance : (address) => option(int)
