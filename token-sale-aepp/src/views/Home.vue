@@ -38,6 +38,7 @@
 </template>
 
 <script>
+    import axios from "axios";
     import aeternity from "../utils/aeternity";
     import {AeIdentity, AeLoader, AeInput, AeButton, AeButtonGroup} from "@aeternity/aepp-components";
     import BiggerLoader from "../components/BiggerLoader";
