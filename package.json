@@ -9,8 +9,7 @@
   "author": "Milen Radkov <milenradkov@me.com>",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "6.0.0",
-    "aeproject-lib": "1.0.2",
+    "@aeternity/aepp-sdk": "9.0.1",
     "yarn": "1.19.1"
   }
 }
