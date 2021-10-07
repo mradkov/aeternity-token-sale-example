@@ -18,22 +18,24 @@
 // THIS IS NOT SECURITY AUDITED
 // DO NEVER USE THIS WITHOUT SECURITY AUDIT FIRST
 
-@compiler >= 4
+@compiler >= 5
+
+include "Option.aes"
+include "String.aes"
 
 /// @title - Fungible token with all the extensions - burn, mint, allowances
 contract FungibleTokenFull =
 
-  // This defines the state of type record encapsulating the conract's mutable state
+  // This defines the state of type record encapsulating the contract's mutable state
   record state =
     { owner        : address      // the smart contract's owner address
     , total_supply : int          // total token supply
     , balances     : balances     // balances for each account
     , meta_info    : meta_info    // token meta info (name, symbol, decimals)
     , allowances   : allowances   // owner of account approves the transfer of an amount to another account
-    , swapped      : map(address, int)
-    , minter       : address  }    // address which is allowed to issue new tokens
+    , swapped      : map(address, int) }
 
-  // This is the meta information record type
+  // This is the meta-information record type
   record meta_info =
     { name     : string
     , symbol   : string
@@ -63,20 +65,24 @@ contract FungibleTokenFull =
   // Create a fungible token with
   // the following `name` `symbol` and `decimals`
   // and set the inital smart contract state
-  entrypoint init(name: string, decimals : int, symbol : string, minter : address) =
+  entrypoint init(name: string, decimals : int, symbol : string, initial_owner_balance : option(int)) =
     // If the `name` lenght is less than 1 symbol abort the execution
     require(String.length(name) >= 1, "STRING_TOO_SHORT_NAME")
     // If the `symbol` length is less than 1 symbol abort the execution
     require(String.length(symbol) >= 1, "STRING_TOO_SHORT_SYMBOL")
     // If the provided value for `decimals` is negative abort the execution
     require_non_negative_value(decimals)
-    { owner        = Call.caller,
-      total_supply = 0,
-      balances     = {},
+    // If negative initial owner balance is passed, abort the execution
+    let initial_supply = Option.default(0, initial_owner_balance)
+    require_non_negative_value(initial_supply)
+
+    let owner = Call.caller
+    { owner        = owner,
+      total_supply = initial_supply,
+      balances     = Option.match({}, (balance) => { [owner] = balance }, initial_owner_balance),
       meta_info    = { name = name, symbol = symbol, decimals = decimals },
       allowances   = {},
-      swapped      = {},
-      minter       = minter }
+      swapped      = {} }
 
   // Get the token meta info
   entrypoint meta_info() : meta_info =
@@ -99,8 +105,8 @@ contract FungibleTokenFull =
   // If the `owner` address haven't had any token balance
   // in this smart contract the return value is None
   // Otherwise Some(int) is returned with the current balance
-  entrypoint balance(owner: address) : option(int) =
-    Map.lookup(owner, state.balances)
+  entrypoint balance(account: address) : option(int) =
+    Map.lookup(account, state.balances)
 
   // Get all swapped tokens stored in state
   entrypoint swapped() : map(address, int) =
@@ -135,15 +141,15 @@ contract FungibleTokenFull =
   // The execution will abort and fail if there is no allowance set up previous this call
   stateful entrypoint transfer_allowance(from_account: address, to_account: address, value: int) =
     let allowance_accounts = { from_account = from_account, for_account = Call.caller }
-    internal_change_allowance(allowance_accounts, -value)
     internal_transfer(from_account, to_account, value)
+    internal_change_allowance(allowance_accounts, -value)
 
   // Create allowance for `for_account` to withdraw from your account `Call.caller`,
   // multiple times, up to the `value` amount.
   // This function will abort and fail if called again when there is allowance
   // already set for these particular accounts pair.
   stateful entrypoint create_allowance(for_account: address, value: int) =
-    // Chcek if the passed value is not negative
+    // Check if the passed value is not negative
     require_non_negative_value(value)
     // Set the allowance account pair in the memory variable
     let allowance_accounts = { from_account =  Call.caller, for_account = for_account }
@@ -180,7 +186,7 @@ contract FungibleTokenFull =
   // Creates `value` tokens and assigns them to `account`, increasing the total supply.
   // Emits a `Mint` event with `account` and `value`.
   stateful entrypoint mint(account: address, value: int) =
-    require(Call.caller == state.minter, "NOT_ALLOWED_TO_MINT")
+    require_owner()
     require_non_negative_value(value)
     put(state{ total_supply = state.total_supply + value, balances[account = 0] @ b = b + value })
     Chain.event(Mint(account, value))
